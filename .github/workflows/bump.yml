@@ -1,0 +1,37 @@
+name: bump
+
+# Points each cask at its app's latest GitHub release. Runs on a schedule
+# because the app repos can't push here without a cross-repo token.
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: MonkeyD
+        run: |
+          set -euo pipefail
+          cask=Casks/monkeyd.rb
+          tag=$(gh release view -R bpvacar/monkeyd --json tagName -q .tagName)
+          version=${tag#v}
+          current=$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")
+          if [ "$version" = "$current" ]; then echo "up to date ($current)"; exit 0; fi
+          url="https://github.com/bpvacar/monkeyd/releases/download/$tag/MonkeyD_${version}_universal.dmg"
+          # The release exists before CI finishes uploading the DMG; try again next run.
+          curl -fsSL -o app.dmg "$url" || { echo "DMG for $tag not uploaded yet"; exit 0; }
+          sha=$(sha256sum app.dmg | cut -d' ' -f1)
+          sed -i "s/^  version \".*\"$/  version \"$version\"/; s/^  sha256 \".*\"$/  sha256 \"$sha\"/" "$cask"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "monkeyd $version"
+          git push
