@@ -1,6 +1,6 @@
 cask "monkeyd" do
-  version "0.1.9"
-  sha256 "b918b05ce0338d003aeb65eddbef1a3312e7c9d171b838db0f5f0dae81377ec1"
+  version "0.1.10"
+  sha256 "7e55dbe863c58bdfbf50b8a6a056d17a561a9e1e7db23c5eb1ccb515dbe32f54"
 
   url "https://github.com/bpvacar/monkeyd/releases/download/v#{version}/MonkeyD_#{version}_universal.dmg"
   name "MonkeyD"
